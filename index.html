@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Sample</title>
+</head>
+<style type="text/css">
+  #dragarea {
+    width: 300px;
+    height: 500px;
+    position: relative;
+  }
+
+  .draggable {
+    width: 300px;
+    height: 45px;
+    line-height: 45px;
+    margin-bottom: 5px;
+    background: #22AAAA;
+    color: #ffffff;
+    text-align: center;
+    transition: top .1s;
+    position: absolute;
+    cursor: pointer;
+    z-index: 1;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: -moz-none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  .draggable:hover {
+    opacity: .9;
+  }
+</style>
+
+<body>
+  <div id="dragarea">
+    <div class="draggable" data-position="0">Item 0</div>
+    <div class="draggable" data-position="1">Item 1</div>
+    <div class="draggable" data-position="2">Item 2</div>
+    <div class="draggable" data-position="3">Item 3</div>
+    <div class="draggable" data-position="4">Item 4</div>
+    <div class="draggable" data-position="5">Item 5</div>
+    <div class="draggable" data-position="6">Item 6</div>
+    <div class="draggable" data-position="7">Item 7</div>
+  </div>
+
+  <script type="text/javascript">
+    (function () {
+
+      const dragarea = document.querySelector('#dragarea');
+      const draggable = document.querySelector('.draggable');
+      const itemHeight = 50;
+      var dragging;
+
+      function refreshItemsPosition() {
+        const draggables = document.querySelectorAll('.draggable');
+        draggables.forEach(element => {
+          element.style.setProperty('top', (position(element) * itemHeight) + 'px');
+        });
+      }
+
+      function position(element) {
+        return parseInt(element.getAttribute('data-position'));
+      }
+
+      function findElementByPosition(position) {
+        return document.querySelector('[data-position="' + position + '"]');
+      }
+
+      function swapElements(element1, element2) {
+
+        if (element1 === null || element2 === null) {
+          return;
+        }
+
+        const element1Position = position(element1);
+        const element2Position = position(element2);
+
+        element1.setAttribute('data-position', element2Position);
+        element2.setAttribute('data-position', element1Position);
+
+        refreshItemsPosition();
+      }
+
+      dragarea.onmousedown = function (e) {
+        dragging = e.target;
+      }
+
+      dragarea.onmouseup = function () {
+        dragging = undefined;
+        refreshItemsPosition();
+      }
+
+      dragarea.onmousemove = function (e) {
+        if (typeof dragging === 'undefined') {
+          return;
+        }
+
+        const topReference = parseInt(dragging.style.top) + (itemHeight / 2);
+        const newPosition = ~~(topReference / 50);
+        const oldPosition = position(dragging);
+
+        if (newPosition !== oldPosition) {
+          swapElements(findElementByPosition(newPosition), dragging);
+        }
+
+        dragging.style.setProperty('top', (e.y - (itemHeight / 2)) + 'px');
+      }
+
+      // Setup
+      refreshItemsPosition();
+    }());
+  </script>
+</body>
+
+</html>
