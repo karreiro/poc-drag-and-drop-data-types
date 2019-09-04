@@ -17,10 +17,10 @@
     height: 45px;
     line-height: 45px;
     margin-bottom: 5px;
-    background: #22AAAA;
+    background: #461fb3;
     color: #ffffff;
     text-align: center;
-    transition: top .1s;
+    transition: all .1s;
     position: absolute;
     cursor: pointer;
     z-index: 1;
@@ -39,14 +39,14 @@
 
 <body>
   <div id="dragarea">
-    <div class="draggable" data-position="0">Item 0</div>
-    <div class="draggable" data-position="1">Item 1</div>
-    <div class="draggable" data-position="2">Item 2</div>
-    <div class="draggable" data-position="3">Item 3</div>
-    <div class="draggable" data-position="4">Item 4</div>
-    <div class="draggable" data-position="5">Item 5</div>
-    <div class="draggable" data-position="6">Item 6</div>
-    <div class="draggable" data-position="7">Item 7</div>
+    <div class="draggable" data-y-position="0" data-x-position="0">Item 0</div>
+    <div class="draggable" data-y-position="1" data-x-position="0">Item 1</div>
+    <div class="draggable" data-y-position="2" data-x-position="0">Item 2</div>
+    <div class="draggable" data-y-position="3" data-x-position="0">Item 3</div>
+    <div class="draggable" data-y-position="4" data-x-position="0">Item 4</div>
+    <div class="draggable" data-y-position="5" data-x-position="0">Item 5</div>
+    <div class="draggable" data-y-position="6" data-x-position="0">Item 6</div>
+    <div class="draggable" data-y-position="7" data-x-position="0">Item 7</div>
   </div>
 
   <script type="text/javascript">
@@ -55,21 +55,41 @@
       const dragarea = document.querySelector('#dragarea');
       const draggable = document.querySelector('.draggable');
       const itemHeight = 50;
+
       var dragging;
+      var draggingInitialX;
 
       function refreshItemsPosition() {
+
         const draggables = document.querySelectorAll('.draggable');
+
         draggables.forEach(element => {
           element.style.setProperty('top', (position(element) * itemHeight) + 'px');
         });
       }
 
-      function position(element) {
-        return parseInt(element.getAttribute('data-position'));
+      function refreshItemsHTML() {
+
+        const draggablesDOM = document.querySelectorAll('.draggable');
+        const draggables = Array.prototype.slice.call(draggablesDOM)
+
+        dragarea.innerHTML = '';
+        draggables.sort((a, b) => a.getAttribute('data-y-position') > b.getAttribute('data-y-position') ? 1 : -1).forEach(element => {
+          dragarea.appendChild(element);
+        });
       }
 
+      function position(element) {
+        return parseInt(element.getAttribute('data-y-position'));
+      }
+
+      function positionX(element) {
+        return parseInt(element.getAttribute('data-x-position'));
+      }
+
+
       function findElementByPosition(position) {
-        return document.querySelector('[data-position="' + position + '"]');
+        return document.querySelector('[data-y-position="' + position + '"]');
       }
 
       function swapElements(element1, element2) {
@@ -81,35 +101,66 @@
         const element1Position = position(element1);
         const element2Position = position(element2);
 
-        element1.setAttribute('data-position', element2Position);
-        element2.setAttribute('data-position', element1Position);
+        element1.setAttribute('data-y-position', element2Position);
+        element2.setAttribute('data-y-position', element1Position);
 
         refreshItemsPosition();
       }
 
-      dragarea.onmousedown = function (e) {
-        dragging = e.target;
-      }
+      function drop() {
 
-      dragarea.onmouseup = function () {
+        const c = parseInt(parseInt((dragging.style.getPropertyValue('left') || 0)) / 60);
+        const currentXPosition = c > 0 ? c : 0;
+
+        dragging.setAttribute('data-x-position', currentXPosition);
+
         dragging = undefined;
         refreshItemsPosition();
+        refreshItemsHTML();
       }
 
+      function drag(e) {
+        dragging = e.target;
+        draggingInitialX = e.x;
+      }
+
+      dragarea.onmousedown = drag;
+
+      dragarea.onmouseup = drop;
+
       dragarea.onmousemove = function (e) {
+
         if (typeof dragging === 'undefined') {
           return;
         }
 
-        const topReference = parseInt(dragging.style.top) + (itemHeight / 2);
-        const newPosition = ~~(topReference / 50);
-        const oldPosition = position(dragging);
+        // Y logic
 
-        if (newPosition !== oldPosition) {
-          swapElements(findElementByPosition(newPosition), dragging);
+        const topYReference = parseInt(dragging.style.top) + (itemHeight / 2);
+        const newYPosition = ~~(topYReference / 50);
+        const oldYPosition = position(dragging);
+
+        if (newYPosition !== oldYPosition) {
+          swapElements(findElementByPosition(newYPosition), dragging);
         }
 
-        dragging.style.setProperty('top', (e.y - (itemHeight / 2)) + 'px');
+
+        var newYFinalPosition = (e.y - (itemHeight / 2));
+        newYFinalPosition = newYFinalPosition > 0 ? newYFinalPosition : 0;
+        newYFinalPosition = newYFinalPosition < dragarea.offsetHeight ? newYFinalPosition : dragarea.offsetHeight;
+
+        dragging.style.setProperty('top', newYFinalPosition + 'px');
+
+        // X logic
+
+        const deltaXPosition = parseInt((e.x - draggingInitialX) / 60);
+        const currentXPosition = positionX(dragging);
+
+        var newXPosition = ((currentXPosition + deltaXPosition) * 60);
+        newXPosition = newXPosition > 0 ? newXPosition : 0;
+        newXPosition = newXPosition < (300 - 60) ? newXPosition : (300 - 60);
+
+        dragging.style.setProperty('left', newXPosition + 'px');
       }
 
       // Setup
