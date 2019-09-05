@@ -120,8 +120,13 @@
       }
 
       function drag(e) {
-        dragging = e.target;
-        draggingInitialX = e.x;
+
+        const target = e.target;
+
+        if (target.classList.contains('draggable')) {
+          dragging = target;
+          draggingInitialX = e.x;
+        }
       }
 
       dragarea.onmousedown = drag;
@@ -143,7 +148,6 @@
         if (newYPosition !== oldYPosition) {
           swapElements(findElementByPosition(newYPosition), dragging);
         }
-
 
         var newYFinalPosition = (e.y - (itemHeight / 2));
         newYFinalPosition = newYFinalPosition > 0 ? newYFinalPosition : 0;
